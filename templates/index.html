@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Irrigation System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            width: 400px;
+            margin: auto;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        button {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart Irrigation System</h1>
+
+    <form id="predictionForm">
+        <label for="crop">Select Crop:</label>
+        <select id="crop" name="crop"></select>
+
+        <label for="season">Select Season:</label>
+        <select id="season" name="season"></select>
+
+        <label for="altitude">Select Altitude:</label>
+        <select id="altitude" name="altitude"></select>
+
+        <label for="soil_type">Select Soil Type:</label>
+        <select id="soil_type" name="soil_type"></select>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        // Fetch available options from dataset
+        fetch("/options")
+            .then(response => response.json())
+            .then(data => {
+                populateDropdown("crop", data.available_crops);
+                populateDropdown("season", data.available_seasons);
+                populateDropdown("altitude", data.available_altitudes);
+                populateDropdown("soil_type", data.available_soil_types);
+            })
+            .catch(error => console.error("Error fetching options:", error));
+
+        function populateDropdown(id, options) {
+            const select = document.getElementById(id);
+            options.forEach(option => {
+                const opt = document.createElement("option");
+                opt.value = option;
+                opt.textContent = option;
+                select.appendChild(opt);
+            });
+        }
+
+        document.getElementById("predictionForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const formData = {
+                crop: document.getElementById("crop").value,
+                season: document.getElementById("season").value,
+                altitude: document.getElementById("altitude").value,
+                soil_type: document.getElementById("soil_type").value
+            };
+            fetch("/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerHTML = `
+                    <p>Predicted Strategy: <strong>${data.predicted_strategy}</strong></p>
+                    <p>Water Requirement: <strong>${data.predicted_water_requirement} mm/day</strong></p>
+                `;
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+</body>
+</html>
